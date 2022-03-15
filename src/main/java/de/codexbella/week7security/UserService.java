@@ -10,10 +10,14 @@ import java.util.Optional;
 public class UserService {
    private final UserRepository userRepository;
 
-   public UserDocument createUser (UserDocument user) {
-      return userRepository.save(user);
+   public String createUser (UserDocument user) {
+      if (userRepository.findByUserName(user.getUserName()).isEmpty()) {
+         userRepository.save(user);
+         return "User created with Username: "+user.getUserName();
+      }
+      return "User already exists.";
    }
-   public Optional<UserDocument> findByEmail(String email) {
-      return userRepository.findByEmail(email);
+   public Optional<UserDocument> findByEmail(String userName) {
+      return userRepository.findByUserName(userName);
    }
 }
