@@ -3,6 +3,7 @@ package de.codexbella.week7security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,9 +29,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .mvcMatchers("/api/breakornobreak").hasAnyRole("USER", "ADMIN")
             .mvcMatchers("/api/breakornobreak/vip").hasRole("ADMIN")
             .mvcMatchers(HttpMethod.POST, "/api/users").permitAll()
+            .mvcMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
             .antMatchers("/**").authenticated()
             .and().formLogin()
             .and().httpBasic();
+   }
+
+   @Override
+   @Bean
+   public AuthenticationManager authenticationManagerBean() throws Exception {
+      return super.authenticationManagerBean();
    }
 
    @Bean

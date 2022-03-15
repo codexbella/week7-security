@@ -13,7 +13,7 @@ public class UserService {
    public String createUser (UserDocument user) {
       if (userRepository.findByUserName(user.getUserName()).isEmpty()) {
          userRepository.save(user);
-         return "User created with Username: "+user.getUserName();
+         return "New user created with Username: "+user.getUserName();
       }
       return "User already exists.";
    }
