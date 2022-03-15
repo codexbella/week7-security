@@ -1,8 +1,9 @@
 package de.codexbella.week7security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -26,5 +27,12 @@ public class JwtService {
             .setExpiration(Date.from(Instant.now().plus(Duration.ofHours(4))))
             .signWith(SignatureAlgorithm.HS256, secret)
             .compact();
+   }
+
+   public Claims parseClaims(String token) {
+      return Jwts.parser()
+            .setSigningKey(secret)
+            .parseClaimsJws(token)
+            .getBody();
    }
 }
