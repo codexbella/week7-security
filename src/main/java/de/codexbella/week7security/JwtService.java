@@ -29,7 +29,7 @@ public class JwtService {
             .compact();
    }
 
-   public Claims parseClaims(String token) {
+   public Claims extractClaims(String token) {
       return Jwts.parser()
             .setSigningKey(secret)
             .parseClaimsJws(token)

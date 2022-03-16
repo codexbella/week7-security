@@ -1,14 +1,15 @@
 package de.codexbella.week7security;
 
 import io.jsonwebtoken.Claims;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -18,39 +19,30 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-   private final JWTUtils jwtUtils;
-   private final MongoUserDetailsService service;
-
-   @Autowired
-   public JwtAuthFilter(JWTUtils jwtUtils, MongoUserDetailsService service) {
-      this.jwtUtils = jwtUtils;
-      this.service = service;
-   }
+   private final JwtService jwtService;
 
    @Override
-   protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
-      String token = getToken(httpServletRequest);
-      String userName = token != null ? jwtUtils.extractUserName(token) : null;
-      if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response , FilterChain filterChain)
+         throws ServletException, IOException {
 
-         UserDetails userDetails = service.loadUserByUsername(userName);
+      String token = getAuthToken(request);
 
-         if (jwtUtils.validateToken(token, userDetails.getUsername())) {
-
-            UsernamePasswordAuthenticationToken token =
-                  new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities();
-
-            token.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpServletRequest));
-            SecurityContextHolder.getContext().setAuthentication(token);
+      if (token != null && !token.isBlank()) {
+         try {
+            Claims claims = jwtService.extractClaims(token);
+            setSecurityContext(claims);
+         } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "invalid token");
          }
       }
-      filterChain.doFilter(httpServletRequest, httpServletResponse);
+      filterChain.doFilter(request, response);
    }
 
-   private String getToken(HttpServletRequest httpServletRequest) {
-      String authHeader = httpServletRequest.getHeader("Authorization");
+   private String getAuthToken(HttpServletRequest request) {
+      String authHeader = request.getHeader("Authorization");
       if (authHeader != null) {
          return authHeader.replace("Bearer", "").trim();
       }
@@ -58,7 +50,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
    }
 
    private void setSecurityContext(Claims claims) {
-      List<GrantedAuthority> grantedAuthorities = null;
-      UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(claims.getSubject(),
+      List<SimpleGrantedAuthority> grantedAuthorities = ((List<String>) claims.get("roles")).stream().map(role -> new SimpleGrantedAuthority(role)).toList();
+      UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(claims.getSubject(), "", grantedAuthorities);
+      SecurityContextHolder.getContext().setAuthentication(token);
    }
 }

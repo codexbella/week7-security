@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth/login")
@@ -27,12 +26,12 @@ public class LoginController {
    public String login(@RequestBody LoginData loginData) {
       try {
          Authentication auth = authenticationManager.authenticate(
-               new UsernamePasswordAuthenticationToken(loginData.getUserName(), loginData.getPassword())
+               new UsernamePasswordAuthenticationToken(loginData.getUsername(), loginData.getPassword())
          );
          List<String> roles = auth.getAuthorities().stream().map(ga -> ga.getAuthority()).toList();
          Map<String, Object> claims = new HashMap<>();
          claims.put("roles", roles);
-         return jwtService.createToken(claims, loginData.getUserName());
+         return jwtService.createToken(claims, loginData.getUsername());
       } catch (Exception e) {
          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid credentials");
       }

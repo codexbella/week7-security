@@ -15,7 +15,9 @@ public class BreakController {
    @GetMapping
    public String breakOrNoBreak(Principal principal) {
       Random randomObject = new Random();
-      String answer = randomObject.nextBoolean() ? "Yes, you can take a break, "+principal.getName() : "No break for you, sorry, "+principal.getName();
+      String answer = randomObject.nextBoolean() ?
+            "Yes, you can take a break, "+principal.getName() :
+            "No break for you, sorry, "+principal.getName();
       return answer;
    }
 
