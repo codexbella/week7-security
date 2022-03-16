@@ -13,11 +13,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class  SecurityConfig extends WebSecurityConfigurerAdapter {
    private final UserDetailsService userDetailsService;
+   private final JwtAuthFilter jwtAuthFilter;
 
    @Override
    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -27,14 +29,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
    protected void configure(HttpSecurity http) throws Exception {
       http.csrf().disable()
             .authorizeRequests()
-            .mvcMatchers("/api/breakornobreak").hasAnyRole("USER", "ADMIN")
+            .mvcMatchers("/api/breakornobreak").authenticated()//hasAnyRole("USER", "ADMIN")
             .mvcMatchers("/api/breakornobreak/vip").hasRole("ADMIN")
             .mvcMatchers(HttpMethod.POST, "/api/users").permitAll()
             .mvcMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
             .antMatchers("/**").authenticated()
-            .and().formLogin()
+            //.and().formLogin()
             .and().httpBasic()
-            .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            .and()
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
    }
 
    @Override
